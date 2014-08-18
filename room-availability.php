@@ -42,6 +42,12 @@ function render_roomavailability($atts) {
         'room' => NULL
             ), $atts);
 
+    $availabilities = json_encode(query_availabilities());
+    $script = '<script type="text/javascript">' .
+            'var availabilities = ' . $availabilities . ";\r\n" .
+            'window.onload = function(){render_roomavailability_table()};' .
+            '</script>';
+
     $room = $a['room'];
     if ($room === NULL) {
         // TODO Render overview
@@ -49,7 +55,50 @@ function render_roomavailability($atts) {
         // TODO Render room
     }
 
-    return '';
+    return $script . '<div id="roomavailability"></div>';
 }
 
+/**
+ * Query for all rooms. Rooms are usually pages with custom field
+ * 'availability'.
+ * 
+ * @return array An array of room objects.
+ */
+function query_rooms() {
+    $query = array(
+        'sort_order' => 'ASC',
+        'sort_column' => 'post_title',
+        'hierarchical' => 0,
+        'meta_key' => 'availability',
+        'post_type' => 'page',
+        'post_status' => 'publish'
+    );
+    $pages = get_pages($query);
+    $ids = array();
+    foreach ($pages as $page) {
+        array_push($ids, array('ID' => $page->ID,
+            'post_title' => $page->post_title));
+    }
+    return $ids;
+}
+
+function query_availabilities() {
+    $rooms = query_rooms();
+    $availabilities = array();
+    foreach ($rooms as $room) {
+        $value = get_post_meta($room['ID'], 'availability', true);
+        array_push($availabilities, array(
+            'room_name' => $room['post_title'],
+            'availability' => explode("\r\n", $value)
+        ));
+    }
+    return $availabilities;
+}
+
+function register_scripts() {
+    wp_enqueue_script('room-availability', plugins_url('js/room-availability.js', __FILE__), array('jquery'));
+    wp_enqueue_style('room-availability', plugins_url('css/site.css', __FILE__));
+}
+
+add_action('wp_enqueue_scripts', 'register_scripts');
 add_shortcode('roomavailability', 'render_roomavailability');

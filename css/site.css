@@ -1,0 +1,7 @@
+#roomavailability > table > tbody td {
+    background-color: red;
+}
+
+#roomavailability > table > tbody td.available {
+    background-color: green;
+}
