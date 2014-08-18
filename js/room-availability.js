@@ -4,23 +4,26 @@
  * and open the template in the editor.
  */
 
-function render_roomavailability_table() {
-    var table = jQuery("<table/>");
+Date.prototype.monthDays = function() {
+    var d = new Date(this.getFullYear(), this.getMonth() + 1, 0);
+    return d.getDate();
+}
 
-    // Build header
+function render_roomavailability_table_header(days) {
     var header = jQuery("<thead/>");
     var headerRow = jQuery("<tr/>");
     jQuery("<th/>").appendTo(headerRow);
-    for (i = 1; i <= 31; i++) {
+    for (i = 1; i <= days; i++) {
         jQuery("<th/>", {
             html: i
         }).appendTo(headerRow);
     }
 
     headerRow.appendTo(header);
-    header.appendTo(table);
+    return header;
+}
 
-    // Build body
+function render_roomavailability_table_body(days) {
     var body = jQuery("<tbody/>");
     for (i = 0; i < availabilities.length; i++) {
         var room = availabilities[i];
@@ -31,7 +34,7 @@ function render_roomavailability_table() {
             "class": "caption"
         }).appendTo(bodyRow);
 
-        for (j = 1; j <= 31; j++) {
+        for (j = 1; j <= days; j++) {
             var cellContent = "B";
             var availableDates = room["availability"];
             var day = j < 10 ? "0" + j : j;
@@ -49,7 +52,18 @@ function render_roomavailability_table() {
 
         bodyRow.appendTo(body);
     }
-    body.appendTo(table);
+    return body;
+}
+
+function render_roomavailability_table() {
+    var table = jQuery("<table/>");
+    var months = new Array("Januar", "Februar", "M&auml;rz", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember");
+    var currentDate = new Date();
+
+    var currentMonthDays = currentDate.monthDays();
+
+    render_roomavailability_table_header(currentMonthDays).appendTo(table);
+    render_roomavailability_table_body(currentMonthDays).appendTo(table);
 
     table.appendTo("#roomavailability");
 }

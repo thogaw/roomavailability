@@ -82,14 +82,34 @@ function query_rooms() {
     return $ids;
 }
 
+function filter_availability_dates($dates) {
+    $historic = array();
+    foreach($dates as $date) {
+        $current = date_parse_from_format('j.m.Y', $date);
+        if($current['year'] < date('Y')) {
+            array_push($historic, $current);
+        } else if($current['year'] == date('Y')) {
+            if($current['month'] < date('m')) {
+                array_push($historic, $current);
+            } else if($current['month'] == date('m')) {
+                if($current['day'] < date('j')) {
+                    array_push($historic, $date);
+                }
+            }
+        }
+    }
+    return array_values(array_diff($dates, $historic));
+}
+
 function query_availabilities() {
     $rooms = query_rooms();
     $availabilities = array();
     foreach ($rooms as $room) {
         $value = get_post_meta($room['ID'], 'availability', true);
+        $dates = explode("\r\n", $value);
         array_push($availabilities, array(
             'room_name' => $room['post_title'],
-            'availability' => explode("\r\n", $value)
+            'availability' => filter_availability_dates($dates)
         ));
     }
     return $availabilities;

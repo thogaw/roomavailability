@@ -2,6 +2,10 @@
     background-color: red;
 }
 
+#roomavailability > table > tbody td.caption {
+    background-color: transparent;
+}
+
 #roomavailability > table > tbody td.available {
     background-color: green;
 }
