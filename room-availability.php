@@ -45,7 +45,7 @@ function render_roomavailability($atts) {
     $availabilities = json_encode(query_availabilities());
     $script = '<script type="text/javascript">' .
             'var availabilities = ' . $availabilities . ";\r\n" .
-            'window.onload = function(){render_roomavailability_table()};' .
+            'window.onload = function(){render_roomavailability()};' .
             '</script>';
 
     $room = $a['room'];
