@@ -1,11 +1,22 @@
-#roomavailability > table > tbody td {
+#roomavailability > table td {
     background-color: red;
+    text-align: center;
 }
 
-#roomavailability > table > tbody td.caption {
+#roomavailability > table td.caption {
     background-color: transparent;
+    text-align: left;
 }
 
-#roomavailability > table > tbody td.available {
+#roomavailability > table td.available {
     background-color: green;
+}
+
+#roomavailability > table th {
+    text-align: center;
+}
+
+#roomavailability > form {
+    text-align: center;
+    padding-bottom: 15px;
 }
