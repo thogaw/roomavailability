@@ -55,7 +55,26 @@ function render_roomavailability($atts) {
         // TODO Render room
     }
 
-    return $script . '<div id="roomavailability"></div>';
+    return $script 
+        . '<div id="roomavailability">' 
+        . render_roomavailability_controls() 
+        . '</div>';
+}
+
+function render_roomavailability_controls() {
+    $thisMonth = date('n');
+    $monthsNames = array("Januar", "Februar", "M&auml;rz", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember");
+    $months = array();
+    for($i = 0; $i < 12; $i++) {
+        $option = '<option value="' . ($i + 1) . '"';
+        if($i === $thisMonth - 1) {
+            $option .= ' selected';
+        }
+        $option .= '>' . $monthsNames[$i] . '</option>';
+        array_push($months, $option);
+    }
+    $thisYear = date('Y');
+    return '<form><fieldset><label>Monat</label><select id="month">' . implode($months) . '</select><label>Jahr</label><select id="year"></select></fieldset></form>';
 }
 
 /**

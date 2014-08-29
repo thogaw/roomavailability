@@ -62,21 +62,6 @@ function render_roomavailability_table_body(selectedDate) {
 function render_roomavailability_controls() {
     var currentDate = new Date();
 
-    var form = jQuery('<form><fieldset><label>Monat</label> <select id="month"/> <label>Jahr</label> <select id="year"/></fieldset></form>');
-    form.appendTo("#roomavailability");
-    var months = new Array("Januar", "Februar", "M&auml;rz", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember");
-    var monthSelect = jQuery("#month");
-    for(i = 0; i < 12; i++) {
-        var currentMonth = currentDate.getMonth();
-        var option = jQuery("<option/>", {
-            value: i + 1,
-            html: months[i],
-            selected: i === currentMonth ? true : false
-        });
-
-        option.appendTo(monthSelect);
-    }
-
     var yearSelect = jQuery("#year");
     for(i = 0; i < 2; i++) {
         var currentYear = currentDate.getYear() + 1900;
