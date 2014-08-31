@@ -80,10 +80,10 @@ EOT;
         $monthOptions = array();
         for($i = 0; $i < count($monthNames); $i++) {
             $atts = '';
-            if($i+1 === $this->thisMonth) {
+            if($i + 1 === $this->thisMonth) {
                 $atts = 'selected';
             }
-            array_push($monthOptions, sprintf(self::optionTemplate, $i, $atts, $monthNames[$i]));
+            array_push($monthOptions, sprintf(self::optionTemplate, $i + 1, $atts, $monthNames[$i]));
         }
 
         $yearOptions = array();
@@ -97,6 +97,52 @@ EOT;
         }
 
         return sprintf(self::controlForm, 'Monat', implode($monthOptions), 'Jahr', implode($yearOptions));
+    }
+
+    /**
+     * Query for all rooms. Rooms are usually pages with custom field
+     * 'availability'.
+     * 
+     * @return array An array of room objects.
+     */
+    function query_rooms() {
+        $query = array(
+            'sort_order' => 'ASC',
+            'sort_column' => 'post_title',
+            'hierarchical' => 0,
+            'meta_key' => 'availability',
+            'post_type' => 'page',
+            'post_status' => 'publish'
+        );
+        $pages = get_pages($query);
+        return $pages;
+    }
+
+    function query_availabilities() {
+        $rooms = $this->query_rooms();
+        $availabilities = array();
+        foreach ($rooms as $room) {
+            $value = get_post_meta($room->ID, 'availability', true);
+            $dates = explode("\r\n", $value);
+            array_push($availabilities, array(
+                'room_name' => $room->post_title,
+                'availability' => $this->filter_availability_dates($dates)
+            ));
+        }
+        return $availabilities;
+    }
+
+    function filter_availability_dates($dates) {
+        $historic = array();
+        $now = mktime(0, 0, 0);
+        foreach($dates as $date) {
+            $current = date_parse_from_format('j.m.Y', $date);
+            $time = mktime(0, 0, 0, $current['month'], $current['day'], $current['year']);
+            if($now - $time > 0) {
+               array_push($historic, $date);
+            }
+        }
+        return array_values(array_diff($dates, $historic));
     }
 }
 
@@ -114,7 +160,8 @@ function render_roomavailability($atts) {
         'room' => NULL
             ), $atts);
 
-    $availabilities = json_encode(query_availabilities());
+    $roomav = new Roomavailability();
+    $availabilities = json_encode($roomav->query_availabilities());
 
     $room = $a['room'];
     if ($room === NULL) {
@@ -123,67 +170,9 @@ function render_roomavailability($atts) {
         // TODO Render room
     }
 
-    $roomav = new Roomavailability();
     $script = sprintf(Roomavailability::bootstrap_script, $availabilities);
     $container = sprintf(Roomavailability::container, $roomav->render_controls());
     return $script . $container;
-}
-
-/**
- * Query for all rooms. Rooms are usually pages with custom field
- * 'availability'.
- * 
- * @return array An array of room objects.
- */
-function query_rooms() {
-    $query = array(
-        'sort_order' => 'ASC',
-        'sort_column' => 'post_title',
-        'hierarchical' => 0,
-        'meta_key' => 'availability',
-        'post_type' => 'page',
-        'post_status' => 'publish'
-    );
-    $pages = get_pages($query);
-    $ids = array();
-    foreach ($pages as $page) {
-        array_push($ids, array('ID' => $page->ID,
-            'post_title' => $page->post_title));
-    }
-    return $ids;
-}
-
-function filter_availability_dates($dates) {
-    $historic = array();
-    foreach($dates as $date) {
-        $current = date_parse_from_format('j.m.Y', $date);
-        if($current['year'] < date('Y')) {
-            array_push($historic, $current);
-        } else if($current['year'] == date('Y')) {
-            if($current['month'] < date('m')) {
-                array_push($historic, $current);
-            } else if($current['month'] == date('m')) {
-                if($current['day'] < date('j')) {
-                    array_push($historic, $date);
-                }
-            }
-        }
-    }
-    return array_values(array_diff($dates, $historic));
-}
-
-function query_availabilities() {
-    $rooms = query_rooms();
-    $availabilities = array();
-    foreach ($rooms as $room) {
-        $value = get_post_meta($room['ID'], 'availability', true);
-        $dates = explode("\r\n", $value);
-        array_push($availabilities, array(
-            'room_name' => $room['post_title'],
-            'availability' => filter_availability_dates($dates)
-        ));
-    }
-    return $availabilities;
 }
 
 function register_scripts() {
