@@ -73,6 +73,7 @@ function render_roomavailability_table() {
     var selectedYear = jQuery("#year option:selected").attr("value");
 
     var selectedDate = new Date();
+    selectedDate.setDate(1);
     selectedDate.setFullYear(selectedYear);
     selectedDate.setMonth(selectedMonth - 1);
 
