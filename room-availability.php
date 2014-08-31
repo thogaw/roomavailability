@@ -74,7 +74,17 @@ function render_roomavailability_controls() {
         array_push($months, $option);
     }
     $thisYear = date('Y');
-    return '<form><fieldset><label>Monat</label><select id="month">' . implode($months) . '</select><label>Jahr</label><select id="year"></select></fieldset></form>';
+    $years = array();
+    for($i = 0; $i < 2; $i++) {
+        $year = $thisYear + $i;
+        $option = '<option value="' . $year . '"';
+        if($year == $thisYear) {
+            $option .= ' selected';
+        }
+        $option .= '>' . $year . '</option>';
+        array_push($years, $option);
+    }
+    return '<form><fieldset><label>Monat</label><select id="month">' . implode($months) . '</select><label>Jahr</label><select id="year">' . implode($years) . '</select></fieldset></form>';
 }
 
 /**

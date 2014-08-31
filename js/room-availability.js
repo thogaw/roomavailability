@@ -59,24 +59,7 @@ function render_roomavailability_table_body(selectedDate) {
     return body;
 }
 
-function render_roomavailability_controls() {
-    var currentDate = new Date();
-
-    var yearSelect = jQuery("#year");
-    for(i = 0; i < 2; i++) {
-        var currentYear = currentDate.getYear() + 1900;
-        var option = jQuery("<option/>", {
-            value: currentYear + i,
-            html: currentYear + i,
-            selected: currentYear + i === currentYear ? true : false
-        });
-
-        option.appendTo(yearSelect);
-    }
-}
-
 function render_roomavailability() {
-    render_roomavailability_controls();
     render_roomavailability_table();
 
     jQuery("#month").change(function() {render_roomavailability_table()});
