@@ -28,6 +28,78 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+class Roomavailability {
+    const bootstrap_script = <<< 'EOT'
+<script type="text/javascript">
+    var availabilities = %s;
+    window.onload = function() {
+        render_roomavailability()
+    };
+</script>
+EOT;
+    const container = '<div id="roomavailability">%s</div>';
+    const optionTemplate = '<option value="%s" %s>%s</option>';
+    const yearsToRender = 2;
+    const controlForm = <<< 'EOT'
+<form>
+  <fieldset>
+    <label>%s</label>
+    <select id="month">
+      %s
+    </select>
+    <label>%s</label>
+    <select id="year">
+      %s
+    </select>
+  </fieldset>
+</form>
+EOT;
+
+    private $thisMonth;
+    private $thisYear;
+
+    function __construct() {
+        $this->thisMonth = date('n');
+        $this->thisYear = date('Y');
+    }
+
+    function render_controls() {
+        $monthNames = array(
+            "Januar", 
+            "Februar", 
+            "M&auml;rz", 
+            "April", 
+            "Mai", 
+            "Juni", 
+            "Juli", 
+            "August", 
+            "September", 
+            "Oktober", 
+            "November", 
+            "Dezember");
+        $monthOptions = array();
+        for($i = 0; $i < count($monthNames); $i++) {
+            $atts = '';
+            if($i+1 === $this->thisMonth) {
+                $atts = 'selected';
+            }
+            array_push($monthOptions, sprintf(self::optionTemplate, $i, $atts, $monthNames[$i]));
+        }
+
+        $yearOptions = array();
+        for($i = 0; $i < self::yearsToRender; $i++) {
+            $year = $this->thisYear + $i;
+            $atts = '';
+            if($year == $this->thisYear) {
+                $atts = 'selected';
+            }
+            array_push($yearOptions, sprintf(self::optionTemplate, $year, $atts, $year));
+        }
+
+        return sprintf(self::controlForm, 'Monat', implode($monthOptions), 'Jahr', implode($yearOptions));
+    }
+}
+
 /**
  * Root function of room-availability plugin. This function replaces the
  * shortcode [roomavailability] or variations of
@@ -43,10 +115,6 @@ function render_roomavailability($atts) {
             ), $atts);
 
     $availabilities = json_encode(query_availabilities());
-    $script = '<script type="text/javascript">' .
-            'var availabilities = ' . $availabilities . ";\r\n" .
-            'window.onload = function(){render_roomavailability()};' .
-            '</script>';
 
     $room = $a['room'];
     if ($room === NULL) {
@@ -55,36 +123,10 @@ function render_roomavailability($atts) {
         // TODO Render room
     }
 
-    return $script 
-        . '<div id="roomavailability">' 
-        . render_roomavailability_controls() 
-        . '</div>';
-}
-
-function render_roomavailability_controls() {
-    $thisMonth = date('n');
-    $monthsNames = array("Januar", "Februar", "M&auml;rz", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember");
-    $months = array();
-    for($i = 0; $i < 12; $i++) {
-        $option = '<option value="' . ($i + 1) . '"';
-        if($i === $thisMonth - 1) {
-            $option .= ' selected';
-        }
-        $option .= '>' . $monthsNames[$i] . '</option>';
-        array_push($months, $option);
-    }
-    $thisYear = date('Y');
-    $years = array();
-    for($i = 0; $i < 2; $i++) {
-        $year = $thisYear + $i;
-        $option = '<option value="' . $year . '"';
-        if($year == $thisYear) {
-            $option .= ' selected';
-        }
-        $option .= '>' . $year . '</option>';
-        array_push($years, $option);
-    }
-    return '<form><fieldset><label>Monat</label><select id="month">' . implode($months) . '</select><label>Jahr</label><select id="year">' . implode($years) . '</select></fieldset></form>';
+    $roomav = new Roomavailability();
+    $script = sprintf(Roomavailability::bootstrap_script, $availabilities);
+    $container = sprintf(Roomavailability::container, $roomav->render_controls());
+    return $script . $container;
 }
 
 /**
