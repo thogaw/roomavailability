@@ -10,9 +10,21 @@ Date.prototype.monthDays = function() {
 }
 
 function render_roomavailability_table_header(selectedDate) {
+    var dayNames = new Array("S","M","D","M","D","F","S");
     var days = selectedDate.monthDays();
+    var month = selectedDate.getMonth();
+    var year = selectedDate.getYear();
     var header = jQuery("<thead/>");
     var headerRow = jQuery("<tr/>");
+    jQuery("<th/>").appendTo(headerRow);
+    for (i = 1; i <= days; i++) {
+        var date = new Date(1900 + year, month + 1, i);
+        jQuery("<th/>", {
+            html: dayNames[date.getDay()]
+        }).appendTo(headerRow);
+    }
+    headerRow.appendTo(header);
+    headerRow = jQuery("<tr/>");
     jQuery("<th/>").appendTo(headerRow);
     for (i = 1; i <= days; i++) {
         jQuery("<th/>", {
@@ -37,7 +49,7 @@ function render_roomavailability_table_body(selectedDate) {
         }).appendTo(bodyRow);
 
         for (j = 1; j <= days; j++) {
-            var cellContent = "B";
+            var cellContent = "&nbsp;";
             var availableDates = room["availability"];
             var day = j < 10 ? "0" + j : j;
             var month = selectedDate.getMonth() + 1 < 10 ? "0" + (selectedDate.getMonth() + 1) : selectedDate.getMonth() + 1;
@@ -45,11 +57,9 @@ function render_roomavailability_table_body(selectedDate) {
             var date = day + "." + month + "." + year;
             var styleClass = "";
             if (jQuery.inArray(date, availableDates) !== -1) {
-                cellContent = "A";
                 styleClass = "available";
             }
             jQuery("<td/>", {
-                html: cellContent,
                 "class": styleClass
             }).appendTo(bodyRow);
         }

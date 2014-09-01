@@ -1,6 +1,9 @@
 #roomavailability > table td {
     background-color: red;
     text-align: center;
+    border-width: 1px;
+    border-color: white;
+    border-style: solid;
 }
 
 #roomavailability > table td.caption {
