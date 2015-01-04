@@ -28,7 +28,18 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-class Roomavailability {
+defined('ABSPATH') or die("No script kiddies please!");
+
+use inc\RoomAvailability;
+
+class Roomavailability_Base {
+
+    const YEARS_TO_RENDER = 2;
+
+}
+
+class Roomavailability_Front extends Roomavailability_Base {
+
     const bootstrap_script = <<< 'EOT'
 <script type="text/javascript">
     var availabilities = %s;
@@ -39,7 +50,6 @@ class Roomavailability {
 EOT;
     const container = '<div id="roomavailability">%s</div>';
     const optionTemplate = '<option value="%s" %s>%s</option>';
-    const yearsToRender = 2;
     const controlForm = <<< 'EOT'
 <form>
   <fieldset>
@@ -65,32 +75,32 @@ EOT;
 
     function render_controls() {
         $monthNames = array(
-            "Januar", 
-            "Februar", 
-            "M&auml;rz", 
-            "April", 
-            "Mai", 
-            "Juni", 
-            "Juli", 
-            "August", 
-            "September", 
-            "Oktober", 
-            "November", 
+            "Januar",
+            "Februar",
+            "M&auml;rz",
+            "April",
+            "Mai",
+            "Juni",
+            "Juli",
+            "August",
+            "September",
+            "Oktober",
+            "November",
             "Dezember");
         $monthOptions = array();
-        for($i = 0; $i < count($monthNames); $i++) {
+        for ($i = 0; $i < count($monthNames); $i++) {
             $atts = '';
-            if($i + 1 === $this->thisMonth) {
+            if ($i + 1 === $this->thisMonth) {
                 $atts = 'selected';
             }
             array_push($monthOptions, sprintf(self::optionTemplate, $i + 1, $atts, $monthNames[$i]));
         }
 
         $yearOptions = array();
-        for($i = 0; $i < self::yearsToRender; $i++) {
+        for ($i = 0; $i < Roomavailability_Base::YEARS_TO_RENDER; $i++) {
             $year = $this->thisYear + $i;
             $atts = '';
-            if($year == $this->thisYear) {
+            if ($year == $this->thisYear) {
                 $atts = 'selected';
             }
             array_push($yearOptions, sprintf(self::optionTemplate, $year, $atts, $year));
@@ -102,7 +112,7 @@ EOT;
     /**
      * Query for all rooms. Rooms are usually pages with custom field
      * 'availability'.
-     * 
+     *
      * @return array An array of room objects.
      */
     function query_rooms() {
@@ -123,11 +133,8 @@ EOT;
         $availabilities = array();
         foreach ($rooms as $room) {
             $value = get_post_meta($room->ID, 'availability', true);
-            $dates = explode("\r\n", $value);
-            array_push($availabilities, array(
-                'room_name' => $room->post_title,
-                'availability' => $this->filter_availability_dates($dates)
-            ));
+            $availability = new RoomAvailability($room->post_title, $value);
+            array_push($availabilities, $availability);
         }
         return $availabilities;
     }
@@ -135,15 +142,16 @@ EOT;
     function filter_availability_dates($dates) {
         $historic = array();
         $now = mktime(0, 0, 0);
-        foreach($dates as $date) {
+        foreach ($dates as $date) {
             $current = date_parse_from_format('j.m.Y', $date);
             $time = mktime(0, 0, 0, $current['month'], $current['day'], $current['year']);
-            if($now - $time > 0) {
-               array_push($historic, $date);
+            if ($now - $time > 0) {
+                array_push($historic, $date);
             }
         }
         return array_values(array_diff($dates, $historic));
     }
+
 }
 
 /**
@@ -151,7 +159,7 @@ EOT;
  * shortcode [roomavailability] or variations of
  * [roomavailability room="Room 1"] with an overview of all rooms or the
  * specified room.
- * 
+ *
  * @param type $atts The shortcodes provided attributes.
  * @return string The replacement of the shortcode.
  */
@@ -160,8 +168,13 @@ function render_roomavailability($atts) {
         'room' => NULL
             ), $atts);
 
-    $roomav = new Roomavailability();
-    $availabilities = json_encode($roomav->query_availabilities());
+    $roomav = new Roomavailability_Front();
+    $availabilities = array();
+    foreach ($roomav->query_availabilities() as $value) {
+        array_push($availabilities, $value->toArray());
+    }
+
+    $availabilitiesJson = json_encode($availabilities);
 
     $room = $a['room'];
     if ($room === NULL) {
@@ -170,7 +183,7 @@ function render_roomavailability($atts) {
         // TODO Render room
     }
 
-    $script = sprintf(Roomavailability::bootstrap_script, $availabilities);
+    $script = sprintf(Roomavailability::bootstrap_script, $availabilitiesJson);
     $container = sprintf(Roomavailability::container, $roomav->render_controls());
     return $script . $container;
 }
