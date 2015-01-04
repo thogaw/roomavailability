@@ -30,7 +30,7 @@
 
 defined('ABSPATH') or die("No script kiddies please!");
 
-use inc\RoomAvailability;
+require_once 'inc/RoomAvailability.php';
 
 class Roomavailability_Base {
 
@@ -139,19 +139,6 @@ EOT;
         return $availabilities;
     }
 
-    function filter_availability_dates($dates) {
-        $historic = array();
-        $now = mktime(0, 0, 0);
-        foreach ($dates as $date) {
-            $current = date_parse_from_format('j.m.Y', $date);
-            $time = mktime(0, 0, 0, $current['month'], $current['day'], $current['year']);
-            if ($now - $time > 0) {
-                array_push($historic, $date);
-            }
-        }
-        return array_values(array_diff($dates, $historic));
-    }
-
 }
 
 /**
@@ -183,8 +170,8 @@ function render_roomavailability($atts) {
         // TODO Render room
     }
 
-    $script = sprintf(Roomavailability::bootstrap_script, $availabilitiesJson);
-    $container = sprintf(Roomavailability::container, $roomav->render_controls());
+    $script = sprintf(Roomavailability_Front::bootstrap_script, $availabilitiesJson);
+    $container = sprintf(Roomavailability_Front::container, $roomav->render_controls());
     return $script . $container;
 }
 

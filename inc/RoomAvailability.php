@@ -16,15 +16,15 @@ class RoomAvailability {
     private $roomName;
     private $availableDates;
 
-    function __construct($roomName, mixed $date) {
+    function __construct($roomName, $date) {
         $this->roomName = $roomName;
 
         if (is_string($date)) {
             $datesStrings = explode("\r\n", $date);
-            $availableDates = array();
+            $this->availableDates = array();
             foreach ($datesStrings as $value) {
                 $valueDate = date_parse_from_format('j.m.Y', $value);
-                array_push($availableDates, $valueDate);
+                array_push($this->availableDates, $valueDate);
             }
         }
     }
@@ -39,24 +39,34 @@ class RoomAvailability {
 
     function getFutureAvailableDates() {
         $datesInFuture = array();
-        
+
         foreach ($this->availableDates as $value) {
-            if($this->isFutureDate($value)) {
+            if ($this->isFutureDate($value)) {
                 array_push($datesInFuture, $value);
             }
         }
-        
+
         return $datesInFuture;
     }
-    
+
     function toArray() {
+        $dates = array();
+
+        foreach ($this->getFutureAvailableDates() as $date) {
+            array_push($dates, array(
+                'day' => $date['day'],
+                'month' => $date['month'],
+                'year' => $date['year']
+            ));
+        }
         $val = array(
             'room_name' => $this->getRoomName(),
-            'availability' => $this->getFutureAvailableDates()
+            'availability' => $dates
         );
+        
         return $val;
     }
-    
+
     private function isFutureDate($date) {
         $now = mktime(0, 0, 0);
         $time = mktime(0, 0, 0, $date['month'], $date['day'], $date['year']);

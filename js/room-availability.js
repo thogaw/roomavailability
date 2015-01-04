@@ -4,13 +4,13 @@
  * and open the template in the editor.
  */
 
-Date.prototype.monthDays = function() {
+Date.prototype.monthDays = function () {
     var d = new Date(this.getFullYear(), this.getMonth() + 1, 0);
     return d.getDate();
-}
+};
 
 function render_roomavailability_table_header(selectedDate) {
-    var dayNames = new Array("S","M","D","M","D","F","S");
+    var dayNames = new Array("S", "M", "D", "M", "D", "F", "S");
     var days = selectedDate.monthDays();
     var month = selectedDate.getMonth();
     var year = selectedDate.getYear();
@@ -18,7 +18,7 @@ function render_roomavailability_table_header(selectedDate) {
     var headerRow = jQuery("<tr/>");
     jQuery("<th/>").appendTo(headerRow);
     for (i = 1; i <= days; i++) {
-        var date = new Date(1900 + year, month + 1, i);
+        var date = new Date(1900 + year, month, i);
         jQuery("<th/>", {
             html: dayNames[date.getDay()]
         }).appendTo(headerRow);
@@ -49,15 +49,15 @@ function render_roomavailability_table_body(selectedDate) {
         }).appendTo(bodyRow);
 
         for (j = 1; j <= days; j++) {
-            var cellContent = "&nbsp;";
             var availableDates = room["availability"];
-            var day = j < 10 ? "0" + j : j;
-            var month = selectedDate.getMonth() + 1 < 10 ? "0" + (selectedDate.getMonth() + 1) : selectedDate.getMonth() + 1;
+            var month = selectedDate.getMonth() + 1;
             var year = selectedDate.getYear() + 1900;
-            var date = day + "." + month + "." + year;
+            var date = {day: j, month: month, year: year};
             var styleClass = "";
-            if (jQuery.inArray(date, availableDates) !== -1) {
-                styleClass = "available";
+            if (jQuery.grep(availableDates, function (d) {
+                return d.day === j && d.month === month && d.year === year;
+            }).length > 0) {
+                styleClass = 'available';
             }
             jQuery("<td/>", {
                 "class": styleClass
@@ -72,8 +72,12 @@ function render_roomavailability_table_body(selectedDate) {
 function render_roomavailability() {
     render_roomavailability_table();
 
-    jQuery("#month").change(function() {render_roomavailability_table()});
-    jQuery("#year").change(function() {render_roomavailability_table()});
+    jQuery("#month").change(function () {
+        render_roomavailability_table();
+    });
+    jQuery("#year").change(function () {
+        render_roomavailability_table();
+    });
 }
 
 function render_roomavailability_table() {
