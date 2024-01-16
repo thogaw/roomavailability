@@ -182,3 +182,19 @@ function register_scripts() {
 
 add_action('wp_enqueue_scripts', 'register_scripts');
 add_shortcode('roomavailability', 'render_roomavailability');
+
+add_action('rest_api_init', function () {
+    register_rest_field('page', 'availability', array(
+        'get_callback' => function ($object) {
+            return get_post_meta($object['id'], 'availability', true);
+        },
+        'update_callback' => function ($value, $object) {
+            return update_post_meta($object->ID, 'availability', $value);
+        },
+        'schema' => array(
+            'description' => __('Availability of the room', 'roomavailability'),
+            'type' => 'string',
+            'context' => array('view', 'edit')
+        ),
+    ));
+});
